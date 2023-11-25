@@ -1,0 +1,55 @@
+{% extends "base.html" %}{% block title %}Registro Usuarios{% endblock %}
+
+{% block content %}
+
+<form method="POST">
+    <h3 align="center">Registro usuarios</h3>
+    <br />
+
+    <div class="form-group">
+      <label for="usuario">Usuario</label>
+      <input
+        type="text"
+        class="form-control"
+        id="usuario"
+        name="usuario"
+        placeholder="Ingrese el usuario"
+        required
+      />
+    </div>
+    <div class="form-group">
+      <label for="contrasena1">Contraseña</label>
+      <input
+        type="password"
+        class="form-control"
+        id="contrasena1"
+        name="contrasena1"
+        placeholder="Ingrese la contraseña"
+        required
+      />
+    </div>
+    <div class="form-group">
+      <label for="contrasena2">Contraseña (Confirmación)</label>
+      <input
+        type="password"
+        class="form-control"
+        id="contrasena2"
+        name="contrasena2"
+        placeholder="Confirmar contraseña"
+        required
+      />
+    </div>
+    <div class="form-group">
+      <label for="rol">Escoja su rol:</label>
+      <select id="rol" name="rol" class="form-control" required>
+          <option value="Administrador">Administrador</option>
+          <option value="Cortador">Cortador</option>
+          <option value="Guarnecedor">Guarnecedor</option>
+          <option value="Ensamblador">Ensamblador</option>
+      </select>
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Registrar</button>
+  </form>
+
+{% endblock %}

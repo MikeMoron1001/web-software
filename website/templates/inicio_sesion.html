@@ -1,0 +1,42 @@
+{% extends "base.html" %}{% block title %}Ingreso{% endblock %}
+
+{% block content %}
+
+<form method="POST">
+    <h3 align="center">Ingreso</h3>
+    <div class="form-group">
+      <label for="usuario" >Usuario</label>
+      <input
+        type="text"
+        class="form-control"
+        id="usuario"
+        name="usuario"
+        placeholder="Ingrese el usuario"
+        required
+      />
+    </div>
+    <div class="form-group">
+      <label for="contrasena">Contraseña</label>
+      <input
+        type="password"
+        class="form-control"
+        id="contrasena"
+        name="contrasena"
+        placeholder="Ingrese la contraseña"
+        required
+      />
+    </div>
+    <div class="form-group">
+      <label for="rol">Escoja su rol:</label>
+      <select id="rol" name="rol" class="form-control" required>
+          <option value="Administrador">Administrador</option>
+          <option value="Cortador">Cortador</option>
+          <option value="Guarnecedor">Guarnecedor</option>
+          <option value="Ensamblador">Ensamblador</option>
+      </select>
+    </div>
+    <br />
+    <button type="submit" class="btn btn-primary">Ingresar</button>
+  </form>
+
+{% endblock %}
