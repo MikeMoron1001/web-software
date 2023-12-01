@@ -15,35 +15,50 @@
                 <option value="Ensamblador">Ensamblador</option>
             </select>
         </div>
-    
-        <div class="form-group">
-            <label for="fecha_inicio">Fecha de inicio:</label>
-            <input
-                type="date"
-                class="form-control"
-                id="fecha_inicio"
-                name="fecha_inicio"
-                placeholder="Ingrese la fecha"
-                required
-            />
-        </div>
-        <div class="form-group">
-            <label for="fecha_fin">Fecha de fin:</label>
-            <input
-                type="date"
-                class="form-control"
-                id="fecha_fin"
-                name="fecha_fin"
-                placeholder="Ingrese la fecha"
-                required
-            />
-        </div>
-
-
-
-        <br />
-        <button type="submit" class="btn btn-primary">Buscar</button>
+        <button type="submit" name="buscar_rol" class="btn btn-primary">Buscar rol</button>
     </form>
+
+    {% if usuarios %}
+
+        <form method="POST">
+
+            <div class="form-group">
+                <label for="usuario_inp">Escoja el usuario a buscar:</label>
+                <select id="usuario_inp" name="usuario_inp" class="form-control" required>
+                    {% for usuario in usuarios %}
+                        <option value={{ usuario.id }}>{{ usuario.usuario }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="fecha_inicio">Fecha de inicio:</label>
+                <input
+                    type="date"
+                    class="form-control"
+                    id="fecha_inicio"
+                    name="fecha_inicio"
+                    placeholder="Ingrese la fecha"
+                    required
+                />
+            </div>
+            <div class="form-group">
+                <label for="fecha_fin">Fecha de fin:</label>
+                <input
+                    type="date"
+                    class="form-control"
+                    id="fecha_fin"
+                    name="fecha_fin"
+                    placeholder="Ingrese la fecha"
+                    required
+                />
+            </div>
+
+            <br />
+            <button type="submit" name="fecha_busqueda" class="btn btn-primary">Buscar usuario</button>
+        </form>
+
+    {% endif %}
 
     {% if producciones %}
 
@@ -68,9 +83,6 @@
 
         {% endfor %}
 
-        
     {% endif %}
 
-    
-    
 {% endblock %}

@@ -83,7 +83,9 @@ def produccion():
                 'precio': producto_q.precio,
                 'fecha': datetime.datetime.now(),
                 'rol': usuario_q.rol,
+                'precio_pack': producto_q.precio_paquete
             }
+            print(producto_agregado)
             # Agregar producción
             producto_add = Produccion(nombre_producto=producto_agregado['nombre_producto'], 
                                     precio=producto_agregado['precio'], 
@@ -97,8 +99,12 @@ def produccion():
             db.session.commit()
             flash('¡Producto agregado!', category='success')
             
-            flash(f"Usuario: {usuario_q.usuario}; Fecha: {datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')}; Producto: {producto_q.nombre_producto} # {contador_id_q}; Rol: {usuario_q.rol.capitalize()}; Precio: {producto_q.precio}", 
-                  category='success')
+            if contador_id_q == 12:
+                flash(f"Usuario: {usuario_q.usuario}; Fecha: {datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')}; Producto: {producto_q.nombre_producto} # {contador_id_q}; Rol: {usuario_q.rol.capitalize()}; Precio producto: {producto_q.precio}; Precio paquete: {producto_agregado['precio_pack']}", 
+                    category='success')
+            else:
+                flash(f"Usuario: {usuario_q.usuario}; Fecha: {datetime.datetime.now().strftime('%d-%m-%Y %H:%M:%S')}; Producto: {producto_q.nombre_producto} # {contador_id_q}; Rol: {usuario_q.rol.capitalize()}; Precio: {producto_q.precio}", 
+                    category='success')
 
     return render_template('produccion.html', usuario=current_user, productos=productos, rol=usuario_q.rol)
     
@@ -107,50 +113,61 @@ def produccion():
 def nomina():
     """Ruta para generar la nómina basada en la producción."""
     usuario_q = Usuario.query.filter_by(usuario=current_user.usuario).first()
-    rol_seleccionado = request.form.get('rol')
     
     if request.method == 'POST':
-        
-        usuarios = Usuario.query.filter_by(rol=rol_seleccionado).all()
-        
-        fecha_inicio = request.form.get('fecha_inicio')
-        fecha_fin = request.form.get('fecha_fin')
-        fecha_fin = datetime.datetime.strptime(fecha_fin, '%Y-%m-%d') + timedelta(days=1)
-
-        # Sacar lista de usuarios
-        lista_usuarios = list(set([i.usuario for i in usuarios]))
-        produccion_por_usuario = []
-        pago_total_por_usuario = []
-
-        for usuario_rol in lista_usuarios:
-            producto_alias = aliased(Producto)
+        print(request.form)
+        if 'buscar_rol' in request.form:
             
-            # Sacar lista de producciones
-            producciones = (
-                db.session.query(
-                    Produccion.nombre_producto,
-                    func.count().label('cantidad'),
-                    func.avg(producto_alias.precio).label('precio_producto'),
-                    func.avg(producto_alias.precio_paquete).label('precio_paquete')
-                )
-                .join(producto_alias, Produccion.nombre_producto == producto_alias.nombre_producto)
-                .filter(
-                    and_(
-                        (Produccion.usuario == usuario_rol),
-                        (Produccion.fecha >= fecha_inicio),
-                        (Produccion.fecha <= fecha_fin)
+            rol_seleccionado = request.form.get('rol')
+            usuarios = Usuario.query.filter_by(rol=rol_seleccionado).all()
+            for usuario in usuarios:
+                print(usuario.id)
+            
+            return render_template('admin_nomina.html', usuarios=usuarios, usuario=current_user, rol=usuario_q.rol)
+        
+        if 'fecha_busqueda' in request.form:
+            
+            usuario_seleccionado = request.form.get('usuario_inp')
+            usuarios = Usuario.query.filter_by(id=usuario_seleccionado).all()
+
+            fecha_inicio = request.form.get('fecha_inicio')
+            fecha_fin = request.form.get('fecha_fin')
+            fecha_fin = datetime.datetime.strptime(fecha_fin, '%Y-%m-%d') + timedelta(days=1)
+
+            # Sacar lista de usuarios
+            lista_usuarios = [usuario.usuario for usuario in usuarios]
+            produccion_por_usuario = []
+            pago_total_por_usuario = []
+
+            for usuario_rol in lista_usuarios:
+                producto_alias = aliased(Producto)
+
+                # Sacar lista de producciones
+                producciones = (
+                    db.session.query(
+                        Produccion.nombre_producto,
+                        func.count().label('cantidad'),
+                        func.avg(producto_alias.precio).label('precio_producto'),
+                        func.avg(producto_alias.precio_paquete).label('precio_paquete')
                     )
+                    .join(producto_alias, Produccion.nombre_producto == producto_alias.nombre_producto)
+                    .filter(
+                        and_(
+                            (Produccion.usuario == usuario_rol),
+                            (Produccion.fecha >= fecha_inicio),
+                            (Produccion.fecha <= fecha_fin)
+                        )
+                    )
+                    .group_by(Produccion.nombre_producto)
+                    .all()
                 )
-                .group_by(Produccion.nombre_producto)
-                .all()
-            )
-            
-            # Procesar resultados de producción
-            produccion_q = [(produccion.nombre_producto, int(produccion.cantidad // 12), int(produccion.cantidad // 12)*produccion.precio_paquete, produccion.cantidad % 12, (produccion.cantidad % 12)*produccion.precio_producto) for produccion in producciones]
-            produccion_por_usuario.append((usuario_rol, produccion_q))
-            # Calcular pago total por usuario
-            pago_total_por_usuario.append((usuario_rol, sum([produccion[2] for produccion in produccion_q]) + sum([produccion[4] for produccion in produccion_q])))
+                
+                # Procesar resultados de producción
+                produccion_q = [(produccion.nombre_producto, int(produccion.cantidad // 12), int(produccion.cantidad // 12)*produccion.precio_paquete, produccion.cantidad % 12, (produccion.cantidad % 12)*produccion.precio_producto) for produccion in producciones]
+                produccion_por_usuario.append((usuario_rol, produccion_q))
+                # Calcular pago total por usuario
+                pago_total_por_usuario.append((usuario_rol, sum([produccion[2] for produccion in produccion_q]) + sum([produccion[4] for produccion in produccion_q])))
 
-        return render_template('admin_nomina.html', usuario=current_user, rol=usuario_q.rol, fecha_inicio=fecha_inicio, fecha_fin=(fecha_fin - timedelta(days=1)).strftime('%Y-%m-%d') , producciones=produccion_por_usuario, pago_total=pago_total_por_usuario)
+            return render_template('admin_nomina.html', usuarios=None, usuario=current_user, rol=usuario_q.rol, fecha_inicio=fecha_inicio, fecha_fin=(fecha_fin - timedelta(days=1)).strftime('%Y-%m-%d') , producciones=produccion_por_usuario, pago_total=pago_total_por_usuario)
 
     return render_template('admin_nomina.html', usuario=current_user, producciones=None, rol=usuario_q.rol)
